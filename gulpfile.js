@@ -9,7 +9,10 @@ var connect = require("gulp-connect"),
     buffer = require("vinyl-buffer"),
     bowerFiles = require("main-bower-files"),
     del = require("del"),
+    livereload = require("gulp-livereload"),
+    nodemon = require("gulp-nodemon"),
     order = require("gulp-order");
+
 
 gulp.task("lint", function(){
     gulp.src(["./app/**/*.js"])
@@ -25,8 +28,8 @@ gulp.task("clean-dev", function(){
 });
 
 gulp.task("copy-css-dev", ["clean-dev"], function(){
-    gulp.src(["./app/**/*.css"])
-    .pipe(gulp.dest("./dist.dev/"));
+    return gulp.src(["./app/**/*.css"])
+        .pipe(gulp.dest("./dist.dev/"));
 });
 
 gulp.task("browserify-dev", ["clean-dev"], function(){
@@ -43,7 +46,7 @@ gulp.task("copy-bower-components-dev", ["clean-dev"], function(){
 });
 
 gulp.task("copy-html-files-dev", ["clean-dev"], function(){
-    gulp.src("./app/**/*.html")
+    return gulp.src("./app/**/*.html")
     .pipe(gulp.dest("./dist.dev/"));
 });
 
@@ -99,21 +102,59 @@ gulp.task("inject-prod", ["copy-css-prod", "copy-html-files-prod", "copy-bower-c
 
 /* MAIN TASKS */
 
-gulp.task("connectDev", ["inject-dev"], function(){
-    connect.server({
-        root: "dist.dev/",
-        port: 8888
+/* servidor y livereload */
+
+gulp.task('watch-dev', ['build-dev'], function() {
+
+    // start nodemon to auto-reload the dev server
+    nodemon({ script: 'server.js', ext: 'js', watch: ['devServer/'], env: {NODE_ENV : 'development'} })
+        .on('restart', function () {
+            console.log('[nodemon] restarted dev server');
+        });
+
+    // start live-reload server
+    livereload.listen({ start: true });
+
+    // watch index
+    gulp.watch("./app/index.html", function() {
+        var sources = gulp.src(["./dist.dev/js/**/*.js", "./dist.dev/**/*.css"]);
+        var vendor = gulp.src(["./dist.dev/vendor/**/*"]).pipe(order(['jquery.js', 'angular.js', 'angular-animate.js', "angular-route.js"]));
+        return gulp.src("./app/index.html")
+            .pipe(inject(vendor, { ignorePath: "/dist.dev", name: "bower"}))
+            .pipe(inject(sources, { ignorePath: "/dist.dev" }))
+            .pipe(gulp.dest("./dist.dev/"))
+            .pipe(livereload());
     });
+
+    // watch app scripts
+    gulp.watch('app/**/*.js', function() {
+        return browserify("./app/js/main.js", { debug: true })
+            .bundle()
+            .pipe(source("bundled.js"))
+            .pipe(gulp.dest("./dist.dev/js/"))
+            .pipe(livereload());
+    });
+
+    // watch html partials
+    gulp.watch(["./app/**/*.html", "!./app/index.html"], function() {
+        return gulp.src(["./app/**/*.html", "!./app/index.html"])
+            .pipe(gulp.dest("./dist.dev/"))
+            .pipe(livereload());
+    });
+
+    // watch styles
+    gulp.watch(["./app/**/*.css"], function() {
+        return gulp.src(["./app/**/*.css"])
+            .pipe(gulp.dest("./dist.dev/"))
+            .pipe(livereload());
+    });
+
 });
 
-gulp.task("connectProd", ["inject-prod"], function(){
-    connect.server({
-        root: "dist.prod/",
-        port: 9999
-    });
-});
 
-gulp.task("build-dev", ["connectDev"]);
-gulp.task("build-prod", ["connectProd"]);
+/* aliases */
+
+gulp.task("build-dev", ["inject-dev"]);
+gulp.task("build-prod", ["inject-prod"]);
 
 gulp.task("default", ["build-dev"]);

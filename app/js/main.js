@@ -19,6 +19,8 @@
                 });
             }
     ]);
+    
+    
     //Load controller
     angular.module("SampleApp").controller("MainController", ["$scope", mainCtrl]);
 })();
