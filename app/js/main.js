@@ -6,21 +6,10 @@
     require("angular-animate");
     var mainCtrl = require("./controllers/MainCtrl");
     
-    angular.module("SampleApp", ["ngRoute", "ngAnimate"])
-        .config(["$locationProvider", "$routeProvider",
-            function($locationProvider, $routeProvider){
-                $locationProvider.hashPrefix("!");
-                $routeProvider.when("/", {
-                    templateUrl: "./partials/partial1.html",
-                    controller: "MainController"
-                })
-                .otherwise({
-                    redirectTo: "/"
-                });
-            }
-    ]);
+    var app = angular.module("SampleApp", ["ngRoute", "ngAnimate"]);
     
     
     //Load controller
-    angular.module("SampleApp").controller("MainController", ["$scope", mainCtrl]);
+    require("./routes")("app");
+    require("./controllers/controllers")("app");
 })();

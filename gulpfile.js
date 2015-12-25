@@ -11,14 +11,42 @@ var connect = require("gulp-connect"),
     del = require("del"),
     livereload = require("gulp-livereload"),
     nodemon = require("gulp-nodemon"),
+    es = require("event-stream"),
+    Q = require("q"),
     order = require("gulp-order");
+
+/* common paths */
+var paths = {
+    scripts: 'app/**/*.js',
+    styles: ['./app/**/*.css', './app/**/*.scss'],
+    images: './images/**/*',
+    index: './app/index.html',
+    partials: ['app/**/*.html', '!app/index.html'],
+    scriptsDevServer: 'devServer/**/*.js'
+};
+var dev_paths = {
+    dist: './dist.prod',
+};
+
+var prod_paths = {
+    dist: './dist.prod',
+};
 
 
 gulp.task("lint", function(){
-    gulp.src(["./app/**/*.js"])
+    gulp.src([paths.scripts])
     .pipe(jshint())
     .pipe(jshint.reporter("default"))
     .pipe(jshint.reporter("fail"));
+});
+
+gulp.task("clean", function(path){
+    var deferred = Q.defer();
+    del(path.dist, function(){
+        deferred.resolve():
+    });
+    return deferred.promise;
+    
 });
 
 /* Gulp tasks for Development Environment */
