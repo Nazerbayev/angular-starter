@@ -13,26 +13,109 @@ var connect = require("gulp-connect"),
     nodemon = require("gulp-nodemon"),
     es = require("event-stream"),
     Q = require("q"),
+    argv = require("yargs"),
+    gulpif = require("gulp-if"),
     order = require("gulp-order");
+
 
 /* common paths */
 var paths = {
-    scripts: 'app/**/*.js',
+    scripts: ['app/**/*.js', "!app/js/main.js"],
+    main: ["app/js/main.js"],
     styles: ['./app/**/*.css', './app/**/*.scss'],
     images: './images/**/*',
     index: './app/index.html',
     partials: ['app/**/*.html', '!app/index.html'],
     scriptsDevServer: 'devServer/**/*.js'
 };
-var dev_paths = {
-    dist: './dist.prod',
+
+/* development paths (default) */
+var dev = {
+    debug: true,
+    dist: './dist.dev',
+    js: "./dist.dev/js/",
+    vendor: "./dist.dev/vendor",
+    scripts_filter: "./dist.dev/js/**/*.js",
+    css_filter: "./dist.dev/**/*.css",
+    vendor_filter: "./dist.dev/vendor/**/*",
+    vendor_order: ['jquery.js', 'angular.js', 'angular-animate.js', "angular-route.js"],
+    index: "./dist.dev/index.html"
 };
 
-var prod_paths = {
+/* production paths */
+var prod = {
+    debug: false,
     dist: './dist.prod',
+    js: "./dist.prod/js/",
+    vendor: "./dist.prod/vendor",
+    scripts_filter: "./dist.prod/js/**/*.js",
+    css_filter: "./dist.prod/**/*.css",
+    vendor_filter: "./dist.prod/vendor/**/*",
+    vendor_order: ['jquery.js', 'angular.js', 'angular-animate.js', "angular-route.js"],
+    index: "./dist.prod/index.html"
+};
+
+/* pipes */
+var pipes = {
+    copyCSS: function() {
+        var env = argv.production ? prod : dev;
+        return gulp.src(paths.styles)
+            .pipe(gulpif(argv.production, minifyCSS({ comments: true, spare: true })))
+            .pipe(gulp.dest(env.dist));
+    },
+    browserify: function() {
+        var env = argv.production ? prod : dev;
+        var opts = { debug: env.debug }
+        if (env.debug) {
+            return browserify(paths.main, opts)
+                .bundle()
+                .pipe(source("bundled.js"))
+                .pipe(gulp.dest(env.js));
+        }
+        else {
+            return browserify(paths.main, opts)
+                .bundle()
+                .pipe(source("bundled.min.js"))
+                .pipe(buffer())
+                .pipe(uglify())
+                .pipe(gulp.dest(env.js));
+        };
+    },
+    copyBowerComponents: function() {
+        var env = argv.production ? prod : dev;
+        return gulp.src(bowerFiles())
+            .pipe(gulp.dest(env.vendor));
+    },
+    copyHtmlFiles: function() {
+        var env = argv.production ? prod : dev;
+        return gulp.src(paths.partials)
+            .pipe(gulp.dest(env.dist));
+    },
+    injectIndex: function() {
+        var env = argv.production ? prod : dev;
+        var sources = gulp.src([ env.scripts_filter, env.css_filter ]);
+        var vendor = gulp.src([env.vendor_filter]).pipe(order(env.vendor_order));
+        return gulp.src(paths.index)
+            .pipe(inject(vendor, { ignorePath: "/dist.dev", name: "bower" }))
+            .pipe(inject(sources, { ignorePath: "/dist.dev" }))
+            .pipe(gulp.dest(env.dist));
+    },
+    clean: function(){
+        /*var deferred = Q.defer();
+        return del(env.dist, function(){
+            deferred.resolve();
+        });
+        return deferred.promise;
+        */
+        var env = argv.production ? prod : dev;
+        return del(env.dist);
+    }
+    
+    
 };
 
 
+/* common tasks */
 gulp.task("lint", function(){
     gulp.src([paths.scripts])
     .pipe(jshint())
@@ -40,102 +123,41 @@ gulp.task("lint", function(){
     .pipe(jshint.reporter("fail"));
 });
 
-gulp.task("clean", function(path){
-    var deferred = Q.defer();
-    del(path.dist, function(){
-        deferred.resolve():
-    });
-    return deferred.promise;
-    
-});
-
 /* Gulp tasks for Development Environment */
 
-gulp.task("clean-dev", function(){
-    return del("./dist.dev/");
+gulp.task("clean", function(){
+    return pipes.clean();
 });
 
-gulp.task("copy-css-dev", ["clean-dev"], function(){
-    return gulp.src(["./app/**/*.css"])
-        .pipe(gulp.dest("./dist.dev/"));
+gulp.task("copy-css", ["clean"], function(){
+    return pipes.copyCSS();
 });
 
-gulp.task("browserify-dev", ["clean-dev"], function(){
-    var opts = { debug: true }
-    return browserify("./app/js/main.js", opts)
-        .bundle()
-        .pipe(source("bundled.js"))
-        .pipe(gulp.dest("./dist.dev/js/"));
+gulp.task("browserify", ["clean"], function(){
+    return pipes.browserify();
 });
 
-gulp.task("copy-bower-components-dev", ["clean-dev"], function(){
-    return gulp.src(bowerFiles())
-        .pipe(gulp.dest("./dist.dev/vendor"));
+gulp.task("copy-bower-components", ["clean"], function(){
+    return pipes.copyBowerComponents();
 });
 
-gulp.task("copy-html-files-dev", ["clean-dev"], function(){
-    return gulp.src("./app/**/*.html")
-    .pipe(gulp.dest("./dist.dev/"));
+gulp.task("copy-html-files", ["clean"], function(){
+    return pipes.copyHtmlFiles();
 });
 
-gulp.task("inject-dev", ["copy-css-dev", "copy-html-files-dev", "copy-bower-components-dev", "browserify-dev"], function(){
-    var sources = gulp.src(["./dist.dev/js/**/*.js", "./dist.dev/**/*.css"]);
-    var vendor = gulp.src(["./dist.dev/vendor/**/*"]).pipe(order(['jquery.js', 'angular.js', 'angular-animate.js', "angular-route.js"]));
-    return gulp.src("./dist.dev/index.html")
-        .pipe(inject(vendor, {relative: true, name: "bower"}))
-        .pipe(inject(sources, { relative: true }))
-        .pipe(gulp.dest("./dist.dev/"));
-});
-
-/* Gulp tasks for Production Environment */
-
-gulp.task("clean-prod", function(){
-    return del("./dist.dev/");
-});
-
-gulp.task("copy-css-prod", ["clean-prod"], function(){
-    var opts = { comments: true, spare: true };
-    gulp.src(["./app/**/*.css"])
-    .pipe(minifyCSS(opts))
-    .pipe(gulp.dest("./dist.prod/"));
-});
-
-gulp.task("browserify-prod", ["clean-prod"], function(){
-    return browserify("./app/js/main.js")
-        .bundle()
-        .pipe(source("bundled.min.js"))
-        .pipe(buffer())
-        .pipe(uglify())
-        .pipe(gulp.dest("./dist.prod/js/"))
-});
-
-gulp.task("copy-bower-components-prod", ["clean-prod"], function(){
-    return gulp.src(bowerFiles())
-        .pipe(gulp.dest("./dist.prod/vendor"));
-});
-
-gulp.task("copy-html-files-prod", ["clean-prod"], function(){
-    gulp.src("./app/**/*.html")
-    .pipe(gulp.dest("./dist.prod/"));
-});
-
-gulp.task("inject-prod", ["copy-css-prod", "copy-html-files-prod", "copy-bower-components-prod", "browserify-prod"], function(){
-    var sources = gulp.src(["./dist.prod/js/**/*.js", "./dist.prod/**/*.css"]);
-    var vendor = gulp.src(["./dist.prod/vendor/**/*"]).pipe(order(['jquery.js', 'angular.js', 'angular-animate.js', "angular-route.js"]));
-    return gulp.src("./dist.prod/index.html")
-        .pipe(inject(vendor, {relative: true, name: "bower"}))
-        .pipe(inject(sources, { relative: true }))
-        .pipe(gulp.dest("./dist.prod/"));
+gulp.task("inject", ["copy-css", "copy-html-files", "copy-bower-components", "browserify"], function(){
+    return pipes.injectIndex();
 });
 
 /* MAIN TASKS */
 
-/* servidor y livereload */
+/* server & livereload */
 
-gulp.task('watch-dev', ['build-dev'], function() {
+gulp.task('watch', ['build'], function() {
 
     // start nodemon to auto-reload the dev server
-    nodemon({ script: 'server.js', ext: 'js', watch: ['devServer/'], env: {NODE_ENV : 'development'} })
+    var environment = argv.production ? "production" : "development";
+    nodemon({ script: 'server.js', ext: 'js', watch: ['devServer/'], env: {NODE_ENV : environment} })
         .on('restart', function () {
             console.log('[nodemon] restarted dev server');
         });
@@ -145,36 +167,22 @@ gulp.task('watch-dev', ['build-dev'], function() {
 
     // watch index
     gulp.watch("./app/index.html", function() {
-        var sources = gulp.src(["./dist.dev/js/**/*.js", "./dist.dev/**/*.css"]);
-        var vendor = gulp.src(["./dist.dev/vendor/**/*"]).pipe(order(['jquery.js', 'angular.js', 'angular-animate.js', "angular-route.js"]));
-        return gulp.src("./app/index.html")
-            .pipe(inject(vendor, { ignorePath: "/dist.dev", name: "bower"}))
-            .pipe(inject(sources, { ignorePath: "/dist.dev" }))
-            .pipe(gulp.dest("./dist.dev/"))
-            .pipe(livereload());
+        return pipes.injectIndex().pipe(livereload());
     });
 
     // watch app scripts
     gulp.watch('app/**/*.js', function() {
-        return browserify("./app/js/main.js", { debug: true })
-            .bundle()
-            .pipe(source("bundled.js"))
-            .pipe(gulp.dest("./dist.dev/js/"))
-            .pipe(livereload());
+        return pipes.browserify().pipe(livereload());
     });
 
     // watch html partials
     gulp.watch(["./app/**/*.html", "!./app/index.html"], function() {
-        return gulp.src(["./app/**/*.html", "!./app/index.html"])
-            .pipe(gulp.dest("./dist.dev/"))
-            .pipe(livereload());
+        return pipes.copyHtmlFiles().pipe(livereload());
     });
 
     // watch styles
     gulp.watch(["./app/**/*.css"], function() {
-        return gulp.src(["./app/**/*.css"])
-            .pipe(gulp.dest("./dist.dev/"))
-            .pipe(livereload());
+        return pipes.copyCSS().pipe(livereload());
     });
 
 });
@@ -182,7 +190,6 @@ gulp.task('watch-dev', ['build-dev'], function() {
 
 /* aliases */
 
-gulp.task("build-dev", ["inject-dev"]);
-gulp.task("build-prod", ["inject-prod"]);
+gulp.task("build", ["inject"]);
 
-gulp.task("default", ["build-dev"]);
+gulp.task("default", ["build"]);
