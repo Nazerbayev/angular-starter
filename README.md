@@ -8,7 +8,7 @@ Gulp setup for AngularJS projects with bower and browserify
 ```javascript
 npm install
 ```
-El script de npm instalará todas las dependencias de node y después de finalizado instalará bower y sus dependencias automáticamente.
+El script de npm instalará todas las dependencias de node y después de finalizado instalará bower y sus dependencias automáticamente.  
 3. Existen dos entornos de desarrollo: **development** y **production**, para ejecutar el entorno de desarrollo:
 
 ```javascript
@@ -46,7 +46,7 @@ El archivo `index.html` utiliza *gulp-inject* para inyectar automaticamente los 
 }
 ```
 
-**vendor_order***: Orden de los archivos de bower.  
+**vendor_order**: Orden de los archivos de bower.  
 **styles_order**: Orden de las hojas de estilos.  
 **js_order**: Orden de los javascripts (adicionales al principal de angular).
 
