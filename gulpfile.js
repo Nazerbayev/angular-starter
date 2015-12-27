@@ -1,6 +1,5 @@
 var gulp = require("gulp");
-var connect = require("gulp-connect"),
-    jshint = require("gulp-jshint"),
+var jshint = require("gulp-jshint"),
     uglify = require("gulp-uglify"),
     inject = require("gulp-inject"),
     minifyCSS = require("gulp-minify-css"),
@@ -16,6 +15,7 @@ var connect = require("gulp-connect"),
     sass = require("gulp-ruby-sass"),
     argv = require("yargs").argv,
     gulpif = require("gulp-if"),
+    imagemin = require("gulp-imagemin"),
     order = require("gulp-order");
 
 var config = require("./build-config.json");
@@ -38,6 +38,7 @@ var pipes = {
     copyAssets: function() {
         var env = argv.production ? config.prod : config.dev;
         return gulp.src(config.common.images)
+            .pipe(gulpif(argv.production, imagemin()))
             .pipe(gulp.dest(env.dist + '/images/'));
     },
     browserify: function() {
@@ -60,8 +61,13 @@ var pipes = {
     },
     copyBowerComponents: function() {
         var env = argv.production ? config.prod : config.dev;
-        return gulp.src(bowerFiles())
+        return gulp.src(bowerFiles(["**/*.js", "**/*.css"]))
             .pipe(gulp.dest(env.vendor));
+    },
+    copyBowerFontComponents: function() {
+        var env = argv.production ? config.prod : config.dev;
+        return gulp.src(bowerFiles(["**/*.eot", "**/*.svg", "**/*.ttf", "**/*.woff", "**/*.woff2"]))
+            .pipe(gulp.dest(env.fonts));
     },
     copyHtmlFiles: function() {
         var env = argv.production ? config.prod : config.dev;
@@ -117,11 +123,11 @@ gulp.task("browserify", ["clean"], function(){
 });
 
 gulp.task("copy-bower-components", ["clean"], function(){
-    return pipes.copyBowerComponents();
+    return es.merge(pipes.copyBowerComponents(), pipes.copyBowerFontComponents());
 });
 
 gulp.task("copy-html-files", ["clean"], function(){
-    return pipes.copyHtmlFiles();
+    return es.merge(pipes.copyAssets(), pipes.copyHtmlFiles());
 });
 
 gulp.task("inject", ["copy-styles", "copy-html-files", "copy-bower-components", "browserify"], function(){

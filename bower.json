@@ -3,22 +3,34 @@
     "description": "Gulp setup with bower and browserify for angularjs projects",
     "main": "gulpfile.js",
     "authors": [
-    "William Bettencourt"
-  ],
+        "William Bettencourt"
+    ],
     "license": "MIT",
     "moduleType": [],
     "homepage": "",
     "private": true,
     "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components",
-    "test",
-    "tests"
-  ],
+        "**/.*",
+        "node_modules",
+        "bower_components",
+        "test",
+        "tests"
+    ],
     "dependencies": {
         "animate.css": "~3.5.0",
         "bootstrap": "~3.3.6",
         "font-awesome": "fontawesome#~4.5.0"
+    },
+    "overrides": {
+        "font-awesome": {
+            "main": [
+                "./css/font-awesome.css",
+                "./fonts/fontawesome-webfont.eot",
+                "./fonts/fontawesome-webfont.svg",
+                "./fonts/fontawesome-webfont.ttf",
+                "./fonts/fontawesome-webfont.woff",
+                "./fonts/fontawesome-webfont.woff2"
+            ]
+        }
     }
 }
