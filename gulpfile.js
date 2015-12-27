@@ -23,8 +23,8 @@ var connect = require("gulp-connect"),
 var paths = {
     scripts: ['app/**/*.js', "!app/js/main.js"],
     main: ["app/js/main.js"],
-    styles_css: ['./app/**/*.css'],
-    styles_sass: ['./app/**/*.scss'],
+    styles_css: ['./app/styles/**/*.css'],
+    styles_sass: ['./app/styles/**/*.scss'],
     images: './app/img/**/*',
     index: './app/index.html',
     partials: ['app/**/*.html', '!app/index.html'],
@@ -37,8 +37,9 @@ var dev = {
     dist: './dist.dev',
     js: "./dist.dev/js/",
     vendor: "./dist.dev/vendor",
+    styles: "./dist.dev/styles",
     scripts_filter: "./dist.dev/js/**/*.js",
-    css_filter: "./dist.dev/**/*.css",
+    css_filter: "./dist.dev/styles/**/*.css",
     vendor_filter: "./dist.dev/vendor/**/*",
     vendor_order: ['jquery.js', 'angular.js', 'angular-animate.js', "angular-route.js"],
     index: "./dist.dev/index.html"
@@ -50,8 +51,9 @@ var prod = {
     dist: './dist.prod',
     js: "./dist.prod/js/",
     vendor: "./dist.prod/vendor",
+    styles: "./dist.prod/styles",
     scripts_filter: "./dist.prod/js/**/*.js",
-    css_filter: "./dist.prod/**/*.css",
+    css_filter: "./dist.prod/styles/**/*.css",
     vendor_filter: "./dist.prod/vendor/**/*",
     vendor_order: ['jquery.js', 'angular.js', 'angular-animate.js', "angular-route.js"],
     index: "./dist.prod/index.html"
@@ -63,14 +65,14 @@ var pipes = {
         var env = argv.production ? prod : dev;
         return gulp.src(paths.styles_css)
             .pipe(gulpif(argv.production, minifyCSS({ comments: true, spare: true })))
-            .pipe(gulp.dest(env.dist));
+            .pipe(gulp.dest(env.styles));
     },
     copySASS: function() {
         var env = argv.production ? prod : dev;
         return sass(paths.styles_sass, { quiet: false })
             .on('error', sass.logError)
             .pipe(gulpif(argv.production, minifyCSS({ comments: true, spare: true })))
-            .pipe(gulp.dest(env.dist));
+            .pipe(gulp.dest(env.styles));
     },
     copyAssets: function() {
         var env = argv.production ? prod : dev;
