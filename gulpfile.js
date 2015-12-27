@@ -13,6 +13,7 @@ var connect = require("gulp-connect"),
     nodemon = require("gulp-nodemon"),
     es = require("event-stream"),
     Q = require("q"),
+    sass = require("gulp-ruby-sass"),
     argv = require("yargs"),
     gulpif = require("gulp-if"),
     order = require("gulp-order");
@@ -22,8 +23,9 @@ var connect = require("gulp-connect"),
 var paths = {
     scripts: ['app/**/*.js', "!app/js/main.js"],
     main: ["app/js/main.js"],
-    styles: ['./app/**/*.css', './app/**/*.scss'],
-    images: './images/**/*',
+    styles_css: ['./app/**/*.css'],
+    styles_sass: ['./app/**/*.scss'],
+    images: './app/img/**/*',
     index: './app/index.html',
     partials: ['app/**/*.html', '!app/index.html'],
     scriptsDevServer: 'devServer/**/*.js'
@@ -59,9 +61,21 @@ var prod = {
 var pipes = {
     copyCSS: function() {
         var env = argv.production ? prod : dev;
-        return gulp.src(paths.styles)
+        return gulp.src(paths.styles_css)
             .pipe(gulpif(argv.production, minifyCSS({ comments: true, spare: true })))
             .pipe(gulp.dest(env.dist));
+    },
+    copySASS: function() {
+        var env = argv.production ? prod : dev;
+        return sass(paths.styles_sass, { quiet: false })
+            .on('error', sass.logError)
+            .pipe(gulpif(argv.production, minifyCSS({ comments: true, spare: true })))
+            .pipe(gulp.dest(env.dist));
+    },
+    copyAssets: function() {
+        var env = argv.production ? prod : dev;
+        return gulp.src(paths.images)
+            .pipe(gulp.dest(env.dist + '/images/'));
     },
     browserify: function() {
         var env = argv.production ? prod : dev;
@@ -129,8 +143,8 @@ gulp.task("clean", function(){
     return pipes.clean();
 });
 
-gulp.task("copy-css", ["clean"], function(){
-    return pipes.copyCSS();
+gulp.task("copy-styles", ["clean"], function(){
+    return es.merge(pipes.copyCSS(), pipes.copySASS());
 });
 
 gulp.task("browserify", ["clean"], function(){
@@ -145,7 +159,7 @@ gulp.task("copy-html-files", ["clean"], function(){
     return pipes.copyHtmlFiles();
 });
 
-gulp.task("inject", ["copy-css", "copy-html-files", "copy-bower-components", "browserify"], function(){
+gulp.task("inject", ["copy-styles", "copy-html-files", "copy-bower-components", "browserify"], function(){
     return pipes.injectIndex();
 });
 
