@@ -14,82 +14,43 @@ var connect = require("gulp-connect"),
     es = require("event-stream"),
     Q = require("q"),
     sass = require("gulp-ruby-sass"),
-    argv = require("yargs"),
+    argv = require("yargs").argv,
     gulpif = require("gulp-if"),
     order = require("gulp-order");
 
-
-/* common paths */
-var paths = {
-    scripts: ['app/**/*.js', "!app/js/main.js"],
-    main: ["app/js/main.js"],
-    styles_css: ['./app/styles/**/*.css'],
-    styles_sass: ['./app/styles/**/*.scss'],
-    images: './app/img/**/*',
-    index: './app/index.html',
-    partials: ['app/**/*.html', '!app/index.html'],
-    scriptsDevServer: 'devServer/**/*.js'
-};
-
-/* development paths (default) */
-var dev = {
-    debug: true,
-    dist: './dist.dev',
-    js: "./dist.dev/js/",
-    vendor: "./dist.dev/vendor",
-    styles: "./dist.dev/styles",
-    scripts_filter: "./dist.dev/js/**/*.js",
-    css_filter: "./dist.dev/styles/**/*.css",
-    vendor_filter: "./dist.dev/vendor/**/*",
-    vendor_order: ['jquery.js', 'angular.js', 'angular-animate.js', "angular-route.js"],
-    index: "./dist.dev/index.html"
-};
-
-/* production paths */
-var prod = {
-    debug: false,
-    dist: './dist.prod',
-    js: "./dist.prod/js/",
-    vendor: "./dist.prod/vendor",
-    styles: "./dist.prod/styles",
-    scripts_filter: "./dist.prod/js/**/*.js",
-    css_filter: "./dist.prod/styles/**/*.css",
-    vendor_filter: "./dist.prod/vendor/**/*",
-    vendor_order: ['jquery.js', 'angular.js', 'angular-animate.js', "angular-route.js"],
-    index: "./dist.prod/index.html"
-};
+var config = require("./build-config.json");
 
 /* pipes */
 var pipes = {
     copyCSS: function() {
-        var env = argv.production ? prod : dev;
-        return gulp.src(paths.styles_css)
+        var env = argv.production ? config.prod : config.dev;
+        return gulp.src(config.common.styles_css)
             .pipe(gulpif(argv.production, minifyCSS({ comments: true, spare: true })))
             .pipe(gulp.dest(env.styles));
     },
     copySASS: function() {
-        var env = argv.production ? prod : dev;
-        return sass(paths.styles_sass, { quiet: false })
+        var env = argv.production ? config.prod : config.dev;
+        return sass(config.common.styles_sass, { quiet: false })
             .on('error', sass.logError)
             .pipe(gulpif(argv.production, minifyCSS({ comments: true, spare: true })))
             .pipe(gulp.dest(env.styles));
     },
     copyAssets: function() {
-        var env = argv.production ? prod : dev;
-        return gulp.src(paths.images)
+        var env = argv.production ? config.prod : config.dev;
+        return gulp.src(config.common.images)
             .pipe(gulp.dest(env.dist + '/images/'));
     },
     browserify: function() {
-        var env = argv.production ? prod : dev;
+        var env = argv.production ? config.prod : config.dev;
         var opts = { debug: env.debug }
         if (env.debug) {
-            return browserify(paths.main, opts)
+            return browserify(config.common.main, opts)
                 .bundle()
                 .pipe(source("bundled.js"))
                 .pipe(gulp.dest(env.js));
         }
         else {
-            return browserify(paths.main, opts)
+            return browserify(config.common.main, opts)
                 .bundle()
                 .pipe(source("bundled.min.js"))
                 .pipe(buffer())
@@ -98,22 +59,24 @@ var pipes = {
         };
     },
     copyBowerComponents: function() {
-        var env = argv.production ? prod : dev;
+        var env = argv.production ? config.prod : config.dev;
         return gulp.src(bowerFiles())
             .pipe(gulp.dest(env.vendor));
     },
     copyHtmlFiles: function() {
-        var env = argv.production ? prod : dev;
-        return gulp.src(paths.partials)
+        var env = argv.production ? config.prod : config.dev;
+        return gulp.src(config.common.partials)
             .pipe(gulp.dest(env.dist));
     },
     injectIndex: function() {
-        var env = argv.production ? prod : dev;
-        var sources = gulp.src([ env.scripts_filter, env.css_filter ]);
+        var env = argv.production ? config.prod : config.dev;
+        var scripts = gulp.src([ env.scripts_filter]).pipe(order(env.scripts_order));
+        var styles = gulp.src([ env.css_filter ]).pipe(order(env.styles_order));
         var vendor = gulp.src([env.vendor_filter]).pipe(order(env.vendor_order));
-        return gulp.src(paths.index)
-            .pipe(inject(vendor, { ignorePath: "/dist.dev", name: "bower" }))
-            .pipe(inject(sources, { ignorePath: "/dist.dev" }))
+        return gulp.src(config.common.index)
+            .pipe(inject(vendor, { ignorePath: config.inject_ignorePath, name: "bower" }))
+            .pipe(inject(scripts, { ignorePath: config.inject_ignorePath }))
+            .pipe(inject(styles, { ignorePath: config.inject_ignorePath }))
             .pipe(gulp.dest(env.dist));
     },
     clean: function(){
@@ -123,7 +86,7 @@ var pipes = {
         });
         return deferred.promise;
         */
-        var env = argv.production ? prod : dev;
+        var env = argv.production ? config.prod : config.dev;
         return del(env.dist);
     }
     
@@ -133,10 +96,10 @@ var pipes = {
 
 /* common tasks */
 gulp.task("lint", function(){
-    gulp.src([paths.scripts])
-    .pipe(jshint())
-    .pipe(jshint.reporter("default"))
-    .pipe(jshint.reporter("fail"));
+    gulp.src([config.common.scripts])
+        .pipe(jshint())
+        .pipe(jshint.reporter("default"))
+        .pipe(jshint.reporter("fail"));
 });
 
 /* Gulp tasks for Development Environment */

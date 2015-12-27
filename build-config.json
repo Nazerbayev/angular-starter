@@ -1,0 +1,43 @@
+{
+    "__comment": "Note that app's styles always come after vendor's styles",
+    "common": {
+        "scripts": ["app/**/*.js", "!app/js/main.js"],
+        "main": ["app/js/main.js"],
+        "styles_css": ["./app/styles/**/*.css"],
+        "styles_sass": ["./app/styles/**/*.scss"],
+        "images": "./app/img/**/*",
+        "index": "./app/index.html",
+        "partials": ["app/**/*.html", "!app/index.html"],
+        "scriptsDevServer": "devServer/**/*.js"
+    },
+    "dev": {
+        "debug": true,
+        "dist": "./dist.dev",
+        "inject_ignorePath": "/dist.dev",
+        "js": "./dist.dev/js/",
+        "vendor": "./dist.dev/vendor",
+        "styles": "./dist.dev/styles",
+        "scripts_filter": "./dist.dev/js/**/*.js",
+        "css_filter": "./dist.dev/styles/**/*.css",
+        "vendor_filter": "./dist.dev/vendor/**/*",
+        "index": "./dist.dev/index.html",
+        "vendor_order": ["jquery.js"],
+        "styles_order": ["main.css", "another.css"],
+        "js_order": []
+    },
+    "prod": {
+        "debug": false,
+        "dist": "./dist.prod",
+        "inject_ignorePath": "/dist.prod",
+        "js": "./dist.prod/js/",
+        "vendor": "./dist.prod/vendor",
+        "styles": "./dist.prod/styles",
+        "scripts_filter": "./dist.prod/js/**/*.js",
+        "css_filter": "./dist.prod/styles/**/*.css",
+        "vendor_filter": "./dist.prod/vendor/**/*",
+        "index": "./dist.prod/index.html",
+        "vendor_order": ["jquery.js"],
+        "styles_order": ["main.css", "another.css"],
+        "js_order": []
+    }
+}
