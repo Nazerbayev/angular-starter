@@ -22,7 +22,7 @@
         "css_filter": "./dist.dev/styles/**/*.css",
         "vendor_filter": "./dist.dev/vendor/**/*",
         "index": "./dist.dev/index.html",
-        "vendor_order": ["jquery.js"],
+        "vendor_order": ["jquery.js", "angular.js", "angular-animate.js", "angular-aria.js", "angular-material.js", "angular-messages.js", "angular-ui-router.js"],
         "styles_order": ["main.css", "another.css"],
         "js_order": []
     },
@@ -38,7 +38,7 @@
         "css_filter": "./dist.prod/styles/**/*.css",
         "vendor_filter": "./dist.prod/vendor/**/*",
         "index": "./dist.prod/index.html",
-        "vendor_order": ["jquery.js"],
+        "vendor_order": ["jquery.js", "angular.js", "angular-animate.js", "angular-aria.js", "angular-material.js", "angular-messages.js", "angular-ui-router.js"],
         "styles_order": ["main.css", "another.css"],
         "js_order": []
     }

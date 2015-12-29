@@ -1,14 +1,11 @@
 (function(){
     "use strict";
-    
-    require("angular");
-    require("angular-route");
-    require("angular-animate");
-    
-    var app = angular.module("SampleApp", ["ngRoute", "ngAnimate"]);
+    var app = angular.module("SampleApp", ["ui.router", "ngAnimate", "ngMessages"]);
     
     
     //Load controller
     require("./routes")(app);
     require("./controllers/controllers")(app);
+    require("./services/services")(app);
+    require("./directives/directives")(app);
 })();

@@ -1,36 +1,40 @@
 {
-    "name": "angular-setup",
-    "description": "Gulp setup with bower and browserify for angularjs projects",
-    "main": "gulpfile.js",
-    "authors": [
-        "William Bettencourt"
-    ],
-    "license": "MIT",
-    "moduleType": [],
-    "homepage": "",
-    "private": true,
-    "ignore": [
-        "**/.*",
-        "node_modules",
-        "bower_components",
-        "test",
-        "tests"
-    ],
-    "dependencies": {
-        "animate.css": "~3.5.0",
-        "bootstrap": "~3.3.6",
-        "font-awesome": "fontawesome#~4.5.0"
-    },
-    "overrides": {
-        "font-awesome": {
-            "main": [
-                "./css/font-awesome.css",
-                "./fonts/fontawesome-webfont.eot",
-                "./fonts/fontawesome-webfont.svg",
-                "./fonts/fontawesome-webfont.ttf",
-                "./fonts/fontawesome-webfont.woff",
-                "./fonts/fontawesome-webfont.woff2"
-            ]
-        }
+  "name": "angular-setup",
+  "description": "Gulp setup with bower and browserify for angularjs projects",
+  "main": "gulpfile.js",
+  "authors": [
+    "William Bettencourt"
+  ],
+  "license": "MIT",
+  "moduleType": [],
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "animate.css": "~3.5.0",
+    "bootstrap": "~3.3.6",
+    "font-awesome": "fontawesome#~4.5.0",
+    "angular": "~1.4.8",
+    "angular-messages": "~1.4.8",
+    "angular-animate": "~1.4.8",
+    "angular-ui-router": "~0.2.15"
+  },
+  "overrides": {
+    "font-awesome": {
+      "main": [
+        "./css/font-awesome.css",
+        "./fonts/fontawesome-webfont.eot",
+        "./fonts/fontawesome-webfont.svg",
+        "./fonts/fontawesome-webfont.ttf",
+        "./fonts/fontawesome-webfont.woff",
+        "./fonts/fontawesome-webfont.woff2"
+      ]
     }
+  }
 }

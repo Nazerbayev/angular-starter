@@ -1,14 +1,21 @@
 module.exports = function(app) {
-    app.config(["$locationProvider", "$routeProvider",
-            function($locationProvider, $routeProvider){
-                $locationProvider.hashPrefix("!");
-                $routeProvider.when("/", {
-                    templateUrl: "./partials/partial1.html",
-                    controller: "MainController"
+    app.config(["$stateProvider", "$urlRouterProvider",
+            function($stateProvider, $urlRouterProvider){
+                
+                $urlRouterProvider.otherwise("/");
+                $stateProvider.state("root", {
+                    url: "",
+                    abstract: true
                 })
-                .otherwise({
-                    redirectTo: "/"
+                .state("root.home", {
+                    url: "/",
+                    templateUrl: "partials/home.html"
+                })
+                .state("root.about", {
+                    url: "/about",
+                    templateUrl: "partials/partial1.html"
                 });
+                
             }
     ]);
 

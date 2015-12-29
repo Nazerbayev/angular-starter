@@ -39,7 +39,7 @@ var pipes = {
         var env = argv.production ? config.prod : config.dev;
         return gulp.src(config.common.images)
             .pipe(gulpif(argv.production, imagemin()))
-            .pipe(gulp.dest(env.dist + '/images/'));
+            .pipe(gulp.dest(env.dist + '/img/'));
     },
     browserify: function() {
         var env = argv.production ? config.prod : config.dev;
@@ -80,9 +80,9 @@ var pipes = {
         var styles = gulp.src([ env.css_filter ]).pipe(order(env.styles_order));
         var vendor = gulp.src([env.vendor_filter]).pipe(order(env.vendor_order));
         return gulp.src(config.common.index)
-            .pipe(inject(vendor, { ignorePath: config.inject_ignorePath, name: "bower" }))
-            .pipe(inject(scripts, { ignorePath: config.inject_ignorePath }))
-            .pipe(inject(styles, { ignorePath: config.inject_ignorePath }))
+            .pipe(inject(vendor, { ignorePath: env.inject_ignorePath, name: "bower" }))
+            .pipe(inject(scripts, { ignorePath: env.inject_ignorePath }))
+            .pipe(inject(styles, { ignorePath: env.inject_ignorePath }))
             .pipe(gulp.dest(env.dist));
     },
     clean: function(){
@@ -166,7 +166,7 @@ gulp.task('watch', ['build'], function() {
     });
 
     // watch styles
-    gulp.watch(["./app/**/*.css"], function() {
+    gulp.watch(["./app/styles/**/*.css"], function() {
         return pipes.copyCSS().pipe(livereload());
     });
 
